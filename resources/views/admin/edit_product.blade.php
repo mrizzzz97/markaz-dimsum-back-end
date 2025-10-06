@@ -3,10 +3,10 @@
 @section('title', 'Edit Product')
 
 @push('styles')
-<link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
 <link rel="stylesheet" href="{{ asset('style/main.css') }}">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
 <style>
     body {
         background: linear-gradient(to right, #f0f4f7, #d9f8e2);

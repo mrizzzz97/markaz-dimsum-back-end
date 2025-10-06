@@ -4,11 +4,11 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('style/main.css') }}">
-<link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
 <style>
   body {
     background-color: #f9fdfc;
