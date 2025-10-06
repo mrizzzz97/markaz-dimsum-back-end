@@ -1,9 +1,9 @@
 @extends('layouts.app')
-
 @section('title', 'Login Admin')
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('style/main.css') }}">
+<link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
 <style>
     body, html {
         height: 100%;
