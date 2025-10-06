@@ -3,6 +3,8 @@
 @section('title', 'Markaz Dimsum - Halal & Murah')
 
 @push('styles')
+
+<link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
 <!-- Google Font -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
