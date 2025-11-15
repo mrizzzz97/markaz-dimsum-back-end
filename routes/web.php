@@ -31,6 +31,12 @@ Route::get('/tentang/visi-misi', function () {
     return view('tentang.visi-misi');
 });
 
+
+Route::get('/', function () {
+    $products = Product::all();
+    return view('index', compact('products'));
+})->name('home');
+
 Route::get('/login', [AdminController::class, 'showLoginForm'])->name('admin.login');
 Route::post('/login', [AdminController::class, 'login'])->name('admin.login.post');
 Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
