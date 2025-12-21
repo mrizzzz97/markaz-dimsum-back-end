@@ -419,96 +419,6 @@
         100% { transform: rotate(360deg); }
     }
 
-    /* Social login */
-    .divider {
-        display: flex;
-        align-items: center;
-        margin: 25px 0;
-    }
-
-    .divider::before,
-    .divider::after {
-        content: '';
-        flex: 1;
-        height: 1px;
-        background: rgba(0, 0, 0, 0.1);
-    }
-
-    .divider span {
-        padding: 0 15px;
-        color: var(--text-light);
-        font-size: 0.9rem;
-    }
-
-    .social-login {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 25px;
-    }
-
-    .social-btn {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 12px;
-        border: 2px solid rgba(0, 0, 0, 0.1);
-        border-radius: 12px;
-        background: var(--card-bg);
-        color: var(--text-color);
-        text-decoration: none;
-        font-weight: 500;
-        transition: var(--transition);
-        position: relative;
-        overflow: hidden;
-    }
-
-    [data-theme="dark"] .social-btn {
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .social-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .social-btn i {
-        margin-right: 8px;
-        font-size: 1.2rem;
-    }
-
-    .social-btn.google i {
-        color: #ea4335;
-    }
-
-    .social-btn.facebook i {
-        color: #1877f2;
-    }
-
-    .social-btn.loading {
-        pointer-events: none;
-        opacity: 0.7;
-    }
-
-    .social-btn.loading::after {
-        content: '';
-        position: absolute;
-        width: 16px;
-        height: 16px;
-        border: 2px solid transparent;
-        border-top-color: #666;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-
-    /* Google Sign-In Button Styling */
-    .g_id_signin {
-        width: 100%;
-        height: 48px;
-        border-radius: 12px;
-        overflow: hidden;
-    }
-
     /* Error and success messages */
     .message {
         padding: 15px;
@@ -529,6 +439,12 @@
         background-color: rgba(46, 204, 113, 0.1);
         color: var(--success-color);
         border-left: 4px solid var(--success-color);
+    }
+
+    .message.info {
+        background-color: rgba(52, 152, 219, 0.1);
+        color: #3498db;
+        border-left: 4px solid #3498db;
     }
 
     .message i {
@@ -569,10 +485,6 @@
 
         .login-form-container h2 {
             font-size: 1.5rem;
-        }
-
-        .social-login {
-            flex-direction: column;
         }
 
         .theme-toggle {
@@ -662,41 +574,12 @@
                     <span>Masuk</span>
                 </button>
             </form>
-
-            <div class="divider">
-                <span>atau masuk dengan</span>
-            </div>
-
-            <div class="social-login">
-                <div id="g_id_onload"
-                     data-client_id="YOUR_GOOGLE_CLIENT_ID"
-                     data-context="signin"
-                     data-ux_mode="popup"
-                     data-callback="handleGoogleSignIn"
-                     data-auto_prompt="false">
-                </div>
-
-                <div class="g_id_signin"
-                     data-type="standard"
-                     data-shape="rectangular"
-                     data-theme="outline"
-                     data-text="signin_with"
-                     data-size="large"
-                     data-logo_alignment="left">
-                </div>
-
-                <a href="#" class="social-btn facebook" id="facebookLoginBtn">
-                    <i class="fab fa-facebook-f"></i>
-                    Facebook
-                </a>
-            </div>
         </div>
     </div>
 </div>
 @endsection
 
 @push('scripts')
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize theme
@@ -753,32 +636,6 @@
             // Add loading state to button
             loginBtn.classList.add('loading');
             loginBtn.querySelector('span').textContent = 'Memproses...';
-            
-            // If you want to prevent actual submission for demo:
-            // e.preventDefault();
-            // setTimeout(() => {
-            //     loginBtn.classList.remove('loading');
-            //     loginBtn.querySelector('span').textContent = 'Masuk';
-            // }, 2000);
-        });
-
-        // Facebook login handler
-        document.getElementById('facebookLoginBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Add loading state
-            this.classList.add('loading');
-            this.style.pointerEvents = 'none';
-            
-            // Here you would implement Facebook login logic
-            // For now, just simulate the process
-            setTimeout(() => {
-                this.classList.remove('loading');
-                this.style.pointerEvents = '';
-                
-                // Show error message for demo
-                showMessage('Facebook login belum tersedia', 'error');
-            }, 2000);
         });
 
         // Forgot password handler
@@ -831,61 +688,5 @@
             }, 5000);
         }
     });
-
-    // Google Sign-In callback function
-    function handleGoogleSignIn(response) {
-        // Decode the JWT token
-        const responsePayload = decodeJwtResponse(response.credential);
-        
-        // Show loading state
-        const googleBtn = document.querySelector('.g_id_signin');
-        googleBtn.style.opacity = '0.7';
-        googleBtn.style.pointerEvents = 'none';
-        
-        // Send the token to your backend for verification
-        fetch('/api/google-login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                token: response.credential,
-                email: responsePayload.email,
-                name: responsePayload.name,
-                avatar: responsePayload.picture
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Redirect to dashboard or show success message
-                window.location.href = data.redirect || '/admin/dashboard';
-            } else {
-                // Show error message
-                showMessage(data.message || 'Login dengan Google gagal', 'error');
-                googleBtn.style.opacity = '';
-                googleBtn.style.pointerEvents = '';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showMessage('Terjadi kesalahan saat login dengan Google', 'error');
-            googleBtn.style.opacity = '';
-            googleBtn.style.pointerEvents = '';
-        });
-    }
-
-    // Function to decode JWT token
-    function decodeJwtResponse(token) {
-        // Split token to get the payload part
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        
-        return JSON.parse(jsonPayload);
-    }
 </script>
 @endpush
