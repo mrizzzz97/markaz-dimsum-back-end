@@ -8,134 +8,142 @@
     {{-- PRINT AREA --}}
     <div id="print-area">
 
-        <div class="card-soft p-4" style="max-width:600px;margin:auto">
+        <div class="card-soft p-3" style="max-width:380px;margin:auto;font-size:13px">
 
             {{-- HEADER --}}
-            <div class="text-center mb-3">
+            <div class="text-center mb-2">
                 <img src="{{ asset('images/logo.png') }}"
                      alt="Logo Markaz Dimsum"
-                     style="height:70px">
+                     style="height:60px">
 
-                <h5 class="mb-0 mt-2">Markaz Dimsum</h5>
-                <small class="text-muted">Struk Pembelian</small>
+                <h6 class="mb-0 mt-1">Markaz Dimsum</h6>
+                <small>Struk Pembelian</small>
             </div>
 
             <hr>
 
-            {{-- INFO TRANSAKSI --}}
-            <table class="table table-borderless mb-2">
+            {{-- INFO --}}
+            <table width="100%">
                 <tr>
                     <td>Invoice</td>
-                    <td class="text-end">{{ $transaction->invoice_code }}</td>
+                    <td align="right">{{ $transaction->invoice_code }}</td>
                 </tr>
                 <tr>
                     <td>Tanggal</td>
-                    <td class="text-end">
+                    <td align="right">
                         {{ $transaction->created_at->timezone('Asia/Jakarta')->format('d/m/Y H:i') }}
                     </td>
                 </tr>
                 <tr>
                     <td>Kasir</td>
-                    <td class="text-end">
-                        {{ $transaction->cashier->name ?? '-' }}
-                    </td>
+                    <td align="right">{{ $transaction->cashier->name ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>Pelanggan</td>
-                    <td class="text-end">
-                        {{ $transaction->customer_name ?? '-' }}
-                    </td>
+                    <td align="right">{{ $transaction->customer_name ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>Metode</td>
-                    <td class="text-end text-uppercase">
-                        {{ $transaction->payment_method }}
-                    </td>
+                    <td align="right">{{ strtoupper($transaction->payment_method) }}</td>
                 </tr>
             </table>
 
             <hr>
 
-            {{-- ITEM --}}
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Produk</th>
-                        <th class="text-center">Qty</th>
-                        <th class="text-end">Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($transaction->items as $item)
-                    <tr>
-                        <td>{{ $item->product->name }}</td>
-                        <td class="text-center">{{ $item->qty }}</td>
-                        <td class="text-end">
-                            Rp {{ number_format($item->subtotal, 0, ',', '.') }}
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
+            {{-- ITEMS --}}
+            <table width="100%">
+                @foreach ($transaction->items as $item)
+                <tr>
+                    <td>
+                        {{ $item->product->name }} <br>
+                        <small>{{ $item->qty }} x Rp {{ number_format($item->product->price,0,',','.') }}</small>
+                    </td>
+                    <td align="right">
+                        Rp {{ number_format($item->subtotal,0,',','.') }}
+                    </td>
+                </tr>
+                @endforeach
             </table>
 
             <hr>
 
             {{-- TOTAL --}}
-            <table class="table table-borderless">
+            <table width="100%">
                 <tr>
                     <td><strong>Total</strong></td>
-                    <td class="text-end">
-                        <strong>
-                            Rp {{ number_format($transaction->total, 0, ',', '.') }}
-                        </strong>
+                    <td align="right">
+                        <strong>Rp {{ number_format($transaction->total,0,',','.') }}</strong>
                     </td>
                 </tr>
                 <tr>
                     <td>Dibayar</td>
-                    <td class="text-end">
-                        Rp {{ number_format($transaction->paid, 0, ',', '.') }}
-                    </td>
+                    <td align="right">Rp {{ number_format($transaction->paid,0,',','.') }}</td>
                 </tr>
                 <tr>
                     <td>Kembalian</td>
-                    <td class="text-end">
-                        Rp {{ number_format($transaction->change, 0, ',', '.') }}
-                    </td>
+                    <td align="right">Rp {{ number_format($transaction->change,0,',','.') }}</td>
                 </tr>
             </table>
+
+            <hr>
+
+            <p class="text-center mb-0">
+                <small>Terima kasih 💚<br>Semoga harimu menyenangkan</small>
+            </p>
 
         </div>
     </div>
 
-    {{-- BUTTON (TIDAK IKUT PRINT) --}}
+    {{-- BUTTON --}}
     <div class="text-center mt-3 d-print-none">
         <button onclick="window.print()" class="btn btn-success btn-sm">
-            Print Struk
+            Print
         </button>
 
-        <a href="{{ route('kasir.transaksi.index') }}"
-           class="btn btn-secondary btn-sm">
+        <button onclick="downloadPDF()" class="btn btn-primary btn-sm">
+            Download
+        </button>
+
+        <a href="{{ route('kasir.transaksi.index') }}" class="btn btn-secondary btn-sm">
             Kembali
         </a>
     </div>
 
 </div>
 
-{{-- PRINT CSS --}}
+{{-- SCRIPT PDF --}}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+function downloadPDF() {
+    const element = document.getElementById('print-area');
+
+    const opt = {
+        margin: 0,
+        filename: 'struk-{{ $transaction->invoice_code }}.pdf',
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: { scale: 2 },
+        jsPDF: {
+            unit: 'mm',
+            format: [58, 200],
+            orientation: 'portrait'
+        }
+    };
+
+    html2pdf().set(opt).from(element).save();
+}
+</script>
+
+{{-- PRINT STYLE --}}
 <style>
 @media print {
-
-    /* SEMBUNYIKAN SEMUA */
     body * {
         visibility: hidden;
     }
 
-    /* TAMPILKAN STRUK SAJA */
     #print-area, #print-area * {
         visibility: visible;
     }
 
-    /* POSISI STRUK */
     #print-area {
         position: absolute;
         left: 0;
@@ -143,12 +151,6 @@
         width: 100%;
     }
 
-    /* HILANGKAN SIDEBAR & HEADER */
-    .sidebar, .topbar {
-        display: none !important;
-    }
-
-    /* RAPIN */
     .card-soft {
         box-shadow: none !important;
         border: none !important;
@@ -156,3 +158,4 @@
 }
 </style>
 @endsection
+    
