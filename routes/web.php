@@ -103,4 +103,8 @@ Route::middleware('auth')->group(function () {
     // 🔹 STRUK / DETAIL
     Route::get('/kasir/transaksi/{id}', [KasirController::class, 'show'])
         ->name('kasir.transaksi.show');
+
+    // 🔹 STRUK MODE TEKS (KHUSUS THERMAL)
+    Route::get('/kasir/transaksi/{id}/struk-text', [KasirController::class, 'strukText'])
+        ->name('kasir.transaksi.struk.text');
 });

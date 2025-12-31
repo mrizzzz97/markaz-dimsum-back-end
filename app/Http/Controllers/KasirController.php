@@ -108,4 +108,12 @@ class KasirController extends Controller
 
         return view('kasir.transaksi.show', compact('transaction'));
     }
+
+    public function strukText($id)
+    {
+        $transaction = Transaction::with(['items.product', 'cashier'])
+            ->findOrFail($id);
+
+        return view('kasir.struk-text', compact('transaction'));
+    }
 }
