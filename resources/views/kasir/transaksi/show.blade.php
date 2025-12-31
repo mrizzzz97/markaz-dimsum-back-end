@@ -5,18 +5,15 @@
 @section('content')
 <div class="container-fluid">
 
-    {{-- PRINT AREA --}}
+    {{-- AREA STRUK --}}
     <div id="print-area">
 
-        <div class="card-soft p-3" style="max-width:380px;margin:auto;font-size:13px">
+        <div style="max-width:380px;margin:auto;font-size:13px;font-family:Arial">
 
             {{-- HEADER --}}
-            <div class="text-center mb-2">
-                <img src="{{ asset('images/logo.png') }}"
-                     alt="Logo Markaz Dimsum"
-                     style="height:60px">
-
-                <h6 class="mb-0 mt-1">Markaz Dimsum</h6>
+            <div style="text-align:center;margin-bottom:10px">
+                <img src="{{ asset('images/logo.png') }}" style="height:60px">
+                <h4 style="margin:5px 0 0">Markaz Dimsum</h4>
                 <small>Struk Pembelian</small>
             </div>
 
@@ -50,7 +47,7 @@
 
             <hr>
 
-            {{-- ITEMS --}}
+            {{-- ITEM --}}
             <table width="100%">
                 @foreach ($transaction->items as $item)
                 <tr>
@@ -71,9 +68,7 @@
             <table width="100%">
                 <tr>
                     <td><strong>Total</strong></td>
-                    <td align="right">
-                        <strong>Rp {{ number_format($transaction->total,0,',','.') }}</strong>
-                    </td>
+                    <td align="right"><strong>Rp {{ number_format($transaction->total,0,',','.') }}</strong></td>
                 </tr>
                 <tr>
                     <td>Dibayar</td>
@@ -87,7 +82,7 @@
 
             <hr>
 
-            <p class="text-center mb-0">
+            <p style="text-align:center;margin-bottom:0">
                 <small>Terima kasih 💚<br>Semoga harimu menyenangkan</small>
             </p>
 
@@ -100,8 +95,8 @@
             Print
         </button>
 
-        <button onclick="downloadPDF()" class="btn btn-primary btn-sm">
-            Download
+        <button onclick="downloadImage()" class="btn btn-warning btn-sm">
+            Download Foto
         </button>
 
         <a href="{{ route('kasir.transaksi.index') }}" class="btn btn-secondary btn-sm">
@@ -111,25 +106,21 @@
 
 </div>
 
-{{-- SCRIPT PDF --}}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+{{-- SCRIPT FOTO --}}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-function downloadPDF() {
+function downloadImage() {
     const element = document.getElementById('print-area');
 
-    const opt = {
-        margin: 0,
-        filename: 'struk-{{ $transaction->invoice_code }}.pdf',
-        image: { type: 'jpeg', quality: 1 },
-        html2canvas: { scale: 2 },
-        jsPDF: {
-            unit: 'mm',
-            format: [58, 200],
-            orientation: 'portrait'
-        }
-    };
-
-    html2pdf().set(opt).from(element).save();
+    html2canvas(element, {
+        scale: 2,
+        backgroundColor: '#ffffff'
+    }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'struk-{{ $transaction->invoice_code }}.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    });
 }
 </script>
 
@@ -150,12 +141,6 @@ function downloadPDF() {
         top: 0;
         width: 100%;
     }
-
-    .card-soft {
-        box-shadow: none !important;
-        border: none !important;
-    }
 }
 </style>
 @endsection
-    
