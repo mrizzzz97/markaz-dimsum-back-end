@@ -3,11 +3,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Product;
 
 class AdminController extends Controller
 {
-    private $adminUsername = 'admin123';
-    private $adminPassword = 'adminQWERTY123';
+    /*
+    |--------------------------------------------------------------------------
+    | AUTH
+    |--------------------------------------------------------------------------
+    */
 
     public function showLoginForm()
     {
@@ -16,123 +21,179 @@ class AdminController extends Controller
 
     public function login(Request $request)
     {
-        $username = $request->input('username');
-        $password = $request->input('password');
+        $credentials = $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required',
+        ]);
 
-        if ($username === $this->adminUsername && $password === $this->adminPassword) {
-            // Store admin login state in session
-            session(['is_admin_logged_in' => true]);
-            return redirect()->route('admin.dashboard');
-        } else {
-            return redirect()->back()->withErrors(['Invalid credentials']);
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+
+            $user = Auth::user();
+
+            // 🔑 PEMBEDA ADMIN & KASIR
+            if ($user->role === 'admin') {
+                return redirect()->route('admin.dashboard');
+            }
+
+            if ($user->role === 'kasir') {
+                return redirect()->route('kasir.dashboard');
+            }
+
+            // kalau role tidak dikenali
+            Auth::logout();
+            return redirect()->route('login')
+                ->with('error', 'Role akun tidak valid');
         }
+
+        return back()->with('error', 'Email atau password salah');
     }
+
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login');
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DASHBOARD  🔥 INI YANG BIKIN 0 SEBELUMNYA
+    |--------------------------------------------------------------------------
+    */
 
     public function dashboard()
     {
-        if (!session('is_admin_logged_in')) {
-            return redirect()->route('admin.login');
-        }
-        // List all products for admin management
-        $products = \App\Models\Product::all();
-        return view('admin.dashboard', compact('products'));
+        // PRODUK
+        $totalProduk = Product::count();
+        $stokHabis   = Product::where('stock', 0)->count();
+        $stokMenipis = Product::whereBetween('stock', [1, 5])->count();
+
+        // PRODUK TERLARIS (sementara pakai rating tertinggi)
+        $produkTerlaris = Product::orderBy('rating', 'desc')->value('name');
+
+        // CHANNEL PENJUALAN (JUMLAH PRODUK)
+        $offlineCount = Product::where('offline_available', 1)->count();
+
+        $tokopediaCount = Product::whereNotNull('tokopedia_url')
+                                ->where('tokopedia_url', '!=', '')
+                                ->count();
+
+        $shopeeCount = Product::whereNotNull('shopee_url')
+                              ->where('shopee_url', '!=', '')
+                              ->count();
+
+        // TRANSAKSI (BELUM ADA)
+        $transaksiHariIni  = 0;
+        $transaksiBulanIni = 0;
+
+        return view('admin.dashboard', compact(
+            'totalProduk',
+            'stokHabis',
+            'stokMenipis',
+            'produkTerlaris',
+            'offlineCount',
+            'tokopediaCount',
+            'shopeeCount',
+            'transaksiHariIni',
+            'transaksiBulanIni'
+        ));
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PRODUK - LIST
+    |--------------------------------------------------------------------------
+    */
+
+    public function products()
+    {
+        $products = Product::latest()->get();
+        return view('admin.products.index', compact('products'));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CREATE
+    |--------------------------------------------------------------------------
+    */
 
     public function createProduct()
     {
-        if (!session('is_admin_logged_in')) {
-            return redirect()->route('admin.login');
-        }
-        return view('admin.create_product');
+        return view('admin.products.create');
     }
 
-    public function storeProduct(\Illuminate\Http\Request $request)
+    public function storeProduct(Request $request)
     {
-        if (!session('is_admin_logged_in')) {
-            return redirect()->route('admin.login');
-        }
         $request->validate([
-            'name' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'image' => 'nullable|image|max:2048',
-            'image_url' => 'nullable|url',
-            'description' => 'nullable|string',
+            'name'          => 'required|string|max:255',
+            'price'         => 'required|numeric',
+            'stock'         => 'required|integer|min:0',
+            'rating'        => 'nullable|numeric|min:0|max:5',
+            'description'   => 'nullable|string',
+            'tokopedia_url' => 'nullable|url',
+            'shopee_url'    => 'nullable|url',
         ]);
 
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('images', 'public');
-        } elseif ($request->input('image_url')) {
-            $imagePath = $request->input('image_url');
-        } else {
-            $imagePath = null;
-        }
+        Product::create([
+            'name'              => $request->name,
+            'price'             => $request->price,
+            'stock'             => $request->stock,
+            'rating'            => $request->rating ?? 5,
+            'description'       => $request->description,
+            'tokopedia_url'     => $request->tokopedia_url,
+            'shopee_url'        => $request->shopee_url,
+            'offline_available' => $request->has('offline_available') ? 1 : 0,
+        ]);
 
-        $product = new \App\Models\Product();
-        $product->name = $request->input('name');
-        $product->price = $request->input('price');
-        $product->description = $request->input('description');
-        $product->image = $imagePath;
-        $product->save();
-
-        return redirect()->route('admin.dashboard')->with('success', 'Product added successfully.');
+        return redirect()->route('admin.products.index');
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | EDIT
+    |--------------------------------------------------------------------------
+    */
 
     public function editProduct($id)
     {
-        if (!session('is_admin_logged_in')) {
-            return redirect()->route('admin.login');
-        }
-        $product = \App\Models\Product::findOrFail($id);
-        return view('admin.edit_product', compact('product'));
+        $product = Product::findOrFail($id);
+        return view('admin.products.edit', compact('product'));
     }
 
-    public function updateProduct(\Illuminate\Http\Request $request, $id)
+    public function updateProduct(Request $request, $id)
     {
-        if (!session('is_admin_logged_in')) {
-            return redirect()->route('admin.login');
-        }
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'rating' => 'required|numeric|min:0|max:5',
-            'image' => 'nullable|image|max:2048',
-            'image_url' => 'nullable|url',
-            'description' => 'nullable|string',
+        $product = Product::findOrFail($id);
+
+        $product->update([
+            'name'              => $request->name,
+            'price'             => $request->price,
+            'stock'             => $request->stock,
+            'rating'            => $request->rating ?? $product->rating,
+            'description'       => $request->description,
+            'tokopedia_url'     => $request->tokopedia_url,
+            'shopee_url'        => $request->shopee_url,
+            'offline_available' => $request->has('offline_available') ? 1 : 0,
         ]);
 
-        $product = \App\Models\Product::findOrFail($id);
-        $product->name = $request->input('name');
-        $product->price = $request->input('price');
-        $product->stock = $request->input('stock');
-        $product->rating = $request->input('rating');
-        $product->description = $request->input('description');
-
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('images', 'public');
-            $product->image = $imagePath;
-        } elseif ($request->input('image_url')) {
-            $product->image = $request->input('image_url');
-        }
-
-        $product->save();
-
-        return redirect()->route('admin.dashboard')->with('success', 'Product updated successfully.');
+        return redirect()->route('admin.products.index');
     }
 
-    public function deleteProduct($id)
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE
+    |--------------------------------------------------------------------------
+    */
+
+    public function destroy($id)
     {
-        if (!session('is_admin_logged_in')) {
-            return redirect()->route('admin.login');
-        }
-        $product = \App\Models\Product::findOrFail($id);
-        $product->delete();
-
-        return redirect()->route('admin.dashboard')->with('success', 'Product deleted successfully.');
+        Product::findOrFail($id)->delete();
+        return redirect()->route('admin.products.index');
     }
 
-    public function logout()
-    {
-        session()->forget('is_admin_logged_in');
-        return redirect()->route('admin.login');
-    }
+
 }
