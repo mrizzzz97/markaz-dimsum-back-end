@@ -171,50 +171,54 @@ class AdminController extends Controller
     public function updateProduct(Request $request, $id){
         $product = Product::findOrFail($id);
 
+        // VALIDASI
         $request->validate([
-            'name'          => 'required|string|max:255',
-            'price'         => 'required|numeric',
-            'stock'         => 'required|integer|min:0',
-            'rating'        => 'nullable|numeric|min:0|max:5',
-            'description'   => 'nullable|string',
-            'tokopedia_url' => 'nullable|url',
-            'shopee_url'    => 'nullable|url',
-            'image'         => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'image_url'     => 'nullable|url',
+            'name'        => 'required|string|max:255',
+            'price'       => 'required|numeric',
+            'stock'       => 'required|integer|min:0',
+            'rating'      => 'nullable|numeric|min:0|max:5',
+            'description' => 'nullable|string',
+            'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'image_url'   => 'nullable|url',
         ]);
 
-        $data = [
+        // DEFAULT IMAGE LAMA
+        $imagePath = $product->image;
+
+        // 🔥 JIKA UPLOAD FILE
+        if ($request->hasFile('image')) {
+
+            // hapus gambar lama (kalau ada & bukan url)
+            if ($product->image && !str_starts_with($product->image, 'http')) {
+                Storage::disk('public')->delete($product->image);
+            }
+
+            $imagePath = $request->file('image')->store('products', 'public');
+        }
+
+        // 🔥 JIKA URL GAMBAR
+        if ($request->filled('image_url')) {
+            $imagePath = $request->image_url;
+        }
+
+        // UPDATE DATA
+        $product->update([
             'name'              => $request->name,
             'price'             => $request->price,
             'stock'             => $request->stock,
             'rating'            => $request->rating ?? $product->rating,
             'description'       => $request->description,
+            'image'             => $imagePath,
             'tokopedia_url'     => $request->tokopedia_url,
             'shopee_url'        => $request->shopee_url,
             'offline_available' => $request->has('offline_available') ? 1 : 0,
-        ];
-
-        // 🔥 PRIORITAS 1: UPLOAD FILE
-        if ($request->hasFile('image')) {
-            // hapus gambar lama kalau dari storage
-            if ($product->image && !str_starts_with($product->image, 'http')) {
-                Storage::disk('public')->delete($product->image);
-            }
-
-            $path = $request->file('image')->store('products', 'public');
-            $data['image'] = $path;
-        }
-        // 🔥 PRIORITAS 2: URL GAMBAR
-        elseif ($request->filled('image_url')) {
-            $data['image'] = $request->image_url;
-        }
-
-        $product->update($data);
+        ]);
 
         return redirect()
             ->route('admin.products.index')
             ->with('success', 'Produk berhasil diperbarui');
     }
+
 
 
     /*
