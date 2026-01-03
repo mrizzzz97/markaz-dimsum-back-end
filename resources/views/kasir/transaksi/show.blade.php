@@ -7,9 +7,6 @@
 <div class="container-fluid d-print-none text-center mb-3">
     <button onclick="window.print()" class="btn btn-success btn-sm">Print</button>
     <button onclick="downloadImage()" class="btn btn-warning btn-sm">Download Foto</button>
-    <a href="{{ route('kasir.transaksi.struk.text', $transaction->id) }}"
-       target="_blank"
-       class="btn btn-dark btn-sm">Cetak Struk (Thermal)</a>
     <a href="{{ route('kasir.transaksi.index') }}" class="btn btn-secondary btn-sm">Kembali</a>
 </div>
 

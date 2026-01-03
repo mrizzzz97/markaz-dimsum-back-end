@@ -431,7 +431,7 @@
 <section class="hero">
   @foreach(['produk-1.png','produk-2.png','produk-3.png'] as $i => $img)
     <div class="hero-slide {{ $i==0?'active':'' }}">
-      <img src="{{ asset('images/product/'.$img) }}" alt="Dimsum Background" onerror="this.src='https://picsum.photos/seed/dimsum{{ $i }}/1920/1080'">
+      <img src="{{ asset('images/product/'.$img) }}" alt="Dimsum Background" >
     </div>
   @endforeach
 
@@ -459,7 +459,7 @@
         @foreach($products as $product)
           <a href="{{ url('/produk/'.$product->id) }}" class="card-product" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
             <div class="card-img-wrapper">
-              <img src="{{ str_starts_with($product->image,'http') ? $product->image : asset('storage/'.$product->image) }}" alt="{{ $product->name }}" loading="lazy" onerror="this.src='https://picsum.photos/seed/'.$product->id.'/400/300'">
+              <img src="{{ str_starts_with($product->image,'http') ? $product->image : asset('storage/'.$product->image) }}" alt="{{ $product->name }}" loading="lazy" >
               <div class="card-action">
                 <i class="bi bi-bag-plus-fill"></i>
               </div>
