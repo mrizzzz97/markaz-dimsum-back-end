@@ -463,45 +463,59 @@ Markaz Dimsum menyajikan dimsum halal dan premium dengan bahan berkualitas, higi
     </div>
 
     <div class="product-grid">
-      @if(isset($products) && count($products) > 0)
+      @if(isset($products) && $products->count())
         @foreach($products as $product)
-          <a href="{{ url('/produk/'.$product->id) }}" class="card-product" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
+          @php
+            $image = $product->image;
+
+            if ($image) {
+              $imageUrl = \Illuminate\Support\Str::startsWith($image, 'http')
+                ? $image
+                : asset('storage/' . $image);
+            } else {
+              // 🔥 placeholder lokal (bukan dummy / bukan URL luar)
+              $imageUrl = asset('images/placeholder-product.png');
+            }
+          @endphp
+
+          <a href="{{ url('/produk/'.$product->id) }}"
+             class="card-product"
+             data-aos="fade-up"
+             data-aos-delay="{{ $loop->index * 100 }}">
+
             <div class="card-img-wrapper">
-              <img src="{{ str_starts_with($product->image,'http') ? $product->image : asset('storage/'.$product->image) }}" alt="{{ $product->name }}" loading="lazy" >
+              <img
+                src="{{ $imageUrl }}"
+                alt="{{ $product->name }}"
+                loading="lazy"
+                onerror="this.src='{{ asset('images/placeholder-product.png') }}'"
+              >
+
               <div class="card-action">
                 <i class="bi bi-bag-plus-fill"></i>
               </div>
             </div>
+
             <div class="card-content">
               @if($loop->first)
                 <div class="card-badge">Best Seller</div>
               @endif
+
               <h4>{{ $product->name }}</h4>
+
               <div class="card-price">
-                <span>Rp{{ number_format($product->price,0,',','.') }}</span>
-                <i class="bi bi-chevron-right" style="font-size: 0.8rem; opacity: 0.5;"></i>
+                <span>Rp{{ number_format($product->price, 0, ',', '.') }}</span>
+                <i class="bi bi-chevron-right"
+                   style="font-size:0.8rem; opacity:.5"></i>
               </div>
             </div>
           </a>
         @endforeach
       @else
-        {{-- Fallback Dummy Data --}}
-        @for($i=1; $i<=4; $i++)
-        <a href="#" class="card-product" data-aos="fade-up">
-          <div class="card-img-wrapper">
-            <img src="https://picsum.photos/seed/dimsum{{$i}}/400/300" alt="Produk {{$i}}">
-            <div class="card-action"><i class="bi bi-bag-plus-fill"></i></div>
-          </div>
-          <div class="card-content">
-            @if($i==1) <div class="card-badge">Best Seller</div> @endif
-            <h4>Dimsum Variasi {{$i}}</h4>
-            <div class="card-price">
-              <span>Rp25.000</span>
-              <i class="bi bi-chevron-right" style="font-size: 0.8rem; opacity: 0.5;"></i>
-            </div>
-          </div>
-        </a>
-        @endfor
+        {{-- Tidak ada produk --}}
+        <div style="text-align:center; grid-column:1/-1; color:#64748b;">
+          Produk belum tersedia.
+        </div>
       @endif
     </div>
   </div>
