@@ -1,6 +1,13 @@
 @extends('layouts.app')
 
-@section('title','Markaz Dimsum – Halal & Premium')
+@section('meta_description')
+Markaz Dimsum menyajikan dimsum halal dan premium dengan bahan berkualitas, higienis, dan cita rasa autentik. Cocok untuk keluarga, reseller, dan event.
+@endsection
+
+@section('og_title', 'Markaz Dimsum – Halal & Premium')
+@section('og_description', 'Dimsum halal premium dengan rasa autentik, lembut, higienis, dan halal. Favorit keluarga sejak 2019.')
+@section('og_image', asset('images/logo.png'))
+
 
 @push('styles')
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
