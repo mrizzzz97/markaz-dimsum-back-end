@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Product;
 
 class AdminController extends Controller
@@ -165,11 +166,24 @@ class AdminController extends Controller
         return view('admin.products.edit', compact('product'));
     }
 
-    public function updateProduct(Request $request, $id)
-    {
+
+
+    public function updateProduct(Request $request, $id){
         $product = Product::findOrFail($id);
 
-        $product->update([
+        $request->validate([
+            'name'          => 'required|string|max:255',
+            'price'         => 'required|numeric',
+            'stock'         => 'required|integer|min:0',
+            'rating'        => 'nullable|numeric|min:0|max:5',
+            'description'   => 'nullable|string',
+            'tokopedia_url' => 'nullable|url',
+            'shopee_url'    => 'nullable|url',
+            'image'         => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'image_url'     => 'nullable|url',
+        ]);
+
+        $data = [
             'name'              => $request->name,
             'price'             => $request->price,
             'stock'             => $request->stock,
@@ -178,10 +192,30 @@ class AdminController extends Controller
             'tokopedia_url'     => $request->tokopedia_url,
             'shopee_url'        => $request->shopee_url,
             'offline_available' => $request->has('offline_available') ? 1 : 0,
-        ]);
+        ];
 
-        return redirect()->route('admin.products.index');
+        // 🔥 PRIORITAS 1: UPLOAD FILE
+        if ($request->hasFile('image')) {
+            // hapus gambar lama kalau dari storage
+            if ($product->image && !str_starts_with($product->image, 'http')) {
+                Storage::disk('public')->delete($product->image);
+            }
+
+            $path = $request->file('image')->store('products', 'public');
+            $data['image'] = $path;
+        }
+        // 🔥 PRIORITAS 2: URL GAMBAR
+        elseif ($request->filled('image_url')) {
+            $data['image'] = $request->image_url;
+        }
+
+        $product->update($data);
+
+        return redirect()
+            ->route('admin.products.index')
+            ->with('success', 'Produk berhasil diperbarui');
     }
+
 
     /*
     |--------------------------------------------------------------------------
