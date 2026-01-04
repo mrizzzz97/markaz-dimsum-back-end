@@ -470,8 +470,9 @@ Markaz Dimsum menyajikan dimsum halal dan premium dengan bahan berkualitas, higi
 
             if ($image) {
               $imageUrl = \Illuminate\Support\Str::startsWith($image, 'http')
-                ? $image
-                : asset('storage/' . $image);
+                  ? $image
+                  : asset($image);
+
             } else {
               // 🔥 placeholder lokal (bukan dummy / bukan URL luar)
               $imageUrl = asset('images/placeholder-product.png');
