@@ -15,6 +15,25 @@ class AdminController extends Controller
     |--------------------------------------------------------------------------
     */
 
+    public function index(Request $request)
+    {
+        // Ambil query builder untuk model Product
+        $query = Product::query();
+
+        // Logika Pencarian
+        if ($request->has('search') && $request->search != '') {
+            $searchTerm = $request->search;
+            $query->where('name', 'like', '%' . $searchTerm . '%')
+                ->orWhere('description', 'like', '%' . $searchTerm . '%');
+        }
+
+        // Paginate hasil (misal 10 data per halaman)
+        // Jangan lupa append parameter search agar pagination tetap membawa keyword
+        $products = $query->latest()->paginate(10)->appends(['search' => $request->search]);
+
+        return view('admin.products.index', compact('products'));
+    }
+
     public function showLoginForm()
     {
         return view('admin.login');
